@@ -378,7 +378,7 @@ class Aggregator(object):
             if self.queue:
                 event = self.flush()
             self.queue.append(record)
-        elif self.queue:
+        elif self.queue is not None:
             self.queue.append(record)
         else:
             LOG.warn("Discarding non-event type while not in event context.")
@@ -487,6 +487,9 @@ def read_record(fileobj):
             raise EOFError()
         rtype, rlen = struct.unpack(">LL", buf)
         buf = fileobj.read(rlen)
+        if rtype not in DECODERS:
+            # Debugging info.
+            LOG.warn("Unknown event type #%s (length %s)!", rtype, rlen)
         if len(buf) < rlen:
             raise EOFError()
         return decode_record(rtype, buf)
